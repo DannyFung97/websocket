@@ -1,7 +1,8 @@
-const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const express = require('express');
 
+// Spinning the HTTP server and the WebSocket server using Socket.IO
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -10,31 +11,26 @@ const io = new Server(server, {
         methods: ["GET", "POST"]
     }
 });
+const port = 8000;
 
-
-require('dotenv').config();
-
+// Handle client connections
 io.on('connection', (socket) => {
-    console.log('a user connected');
-    
-    socket.on('interaction', (data) => {
-        io.emit('interaction', data);
-    });
+  console.log(`A user connected: ${socket.id}`);
 
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
-    });
+  // Listen for 'interaction' events from the client
+  socket.on('interaction', (data) => {
+    console.log('Received interaction:', data);
+
+    // Send the message to all connected clients, including the sender
+    io.emit('interaction', data);
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
 });
 
-app.get('/status', (req, res) => {
-    return res.status(200).json({
-        msg: 'Working',
-    });
+server.listen(port, () => {
+  console.log(`Socket.IO server is running on port ${port}`);
 });
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Listening on port ${PORT}`);
-});
-
-
